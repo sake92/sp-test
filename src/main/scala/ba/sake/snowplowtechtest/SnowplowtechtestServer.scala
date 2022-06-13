@@ -1,42 +1,37 @@
 package ba.sake.snowplowtechtest
 
-import cats.effect.{Async, Resource}
+import cats.effect.{IO, Resource}
 import cats.syntax.all._
-import com.comcast.ip4s._
 import fs2.Stream
-import org.http4s.ember.client.EmberClientBuilder
+import com.comcast.ip4s._
 import org.http4s.ember.server.EmberServerBuilder
 import org.http4s.implicits._
 import org.http4s.server.middleware.Logger
+import ba.sake.snowplowtechtest.routes.JsonSchemaValidationRoutes
 
 object SnowplowtechtestServer {
 
-  def stream[F[_]: Async]: Stream[F, Nothing] = {
-    for {
-      client <- Stream.resource(EmberClientBuilder.default[F].build)
-      helloWorldAlg = HelloWorld.impl[F]
-      jokeAlg = Jokes.impl[F](client)
-
-      // Combine Service Routes into an HttpApp.
-      // Can also be done via a Router if you
-      // want to extract segments not checked
-      // in the underlying routes.
-      httpApp = (
-        SnowplowtechtestRoutes.helloWorldRoutes[F](helloWorldAlg) <+>
-        SnowplowtechtestRoutes.jokeRoutes[F](jokeAlg)
+  def stream: Stream[IO, Nothing] = {
+    val httpApp = (
+        JsonSchemaValidationRoutes.schemaRoutes <+>
+        JsonSchemaValidationRoutes.validateRoutes
       ).orNotFound
 
       // With Middlewares in place
-      finalHttpApp = Logger.httpApp(true, true)(httpApp)
+    val  finalHttpApp = Logger.httpApp(true, true)(httpApp)
+    val bla = for {
+      _ <- Stream(())
+      
 
       exitCode <- Stream.resource(
-        EmberServerBuilder.default[F]
+        EmberServerBuilder.default[IO]
           .withHost(ipv4"0.0.0.0")
           .withPort(port"8080")
           .withHttpApp(finalHttpApp)
           .build >>
-        Resource.eval(Async[F].never)
+        Resource.eval(IO.never)
       )
     } yield exitCode
+    bla
   }.drain
 }
