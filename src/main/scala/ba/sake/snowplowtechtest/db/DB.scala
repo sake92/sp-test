@@ -1,10 +1,11 @@
-package ba.sake.snowplowtechtest
+package ba.sake.snowplowtechtest.db
 
 import cats.effect.IO
 import cats.effect.Resource
 import org.flywaydb.core.Flyway
 import doobie.hikari.HikariTransactor
 import doobie.util.ExecutionContexts
+import ba.sake.snowplowtechtest.AppConfig
 
 object DB {
 
@@ -22,6 +23,7 @@ object DB {
   def applyDbMigrations(transactor: HikariTransactor[IO]): IO[Unit] =
     transactor.configure { dataSource =>
       IO.blocking {
+        println("Migrating database...")
         val flyWay = Flyway.configure().dataSource(dataSource).load()
         flyWay.migrate()
         ()

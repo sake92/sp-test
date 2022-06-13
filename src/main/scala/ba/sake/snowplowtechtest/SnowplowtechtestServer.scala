@@ -7,30 +7,37 @@ import com.comcast.ip4s._
 import org.http4s.ember.server.EmberServerBuilder
 import org.http4s.implicits._
 import org.http4s.server.middleware.Logger
-import ba.sake.snowplowtechtest.routes.JsonSchemaValidationRoutes
 import pureconfig._
 import pureconfig.generic.auto._
-import AppConfig._
+
+import ba.sake.snowplowtechtest.db.DB
+import ba.sake.snowplowtechtest.db.repositories._
+import ba.sake.snowplowtechtest.services._
+import ba.sake.snowplowtechtest.routes._
 
 object SnowplowtechtestServer {
-
+  import AppConfig._
 
   def stream: Stream[IO, Nothing] = {
-    val httpApp = (
-      JsonSchemaValidationRoutes.schemaRoutes <+>
-        JsonSchemaValidationRoutes.validateRoutes
-    ).orNotFound
-
-    val finalHttpApp = Logger.httpApp(true, true)(httpApp)
-
     for {
       config <- Stream.fromEither[IO](
-        ConfigSource.default.load[AppConfig].leftMap(failures => new RuntimeException(failures.toString))
+        ConfigSource.default
+          .load[AppConfig]
+          .leftMap(failures => new RuntimeException(failures.toString))
       )
-
       xa <- Stream.resource(DB.transactor(config))
+      _ <- Stream.eval(DB.applyDbMigrations(xa))
 
-      _ <- Stream(DB.applyDbMigrations(xa))
+      jsonSchemaRepository = new JsonSchemaRepository(xa)
+      jsonSchemaService = new JsonSchemaService(jsonSchemaRepository)
+      jsonSchemaValidationRoutes = new JsonSchemaValidationRoutes(jsonSchemaService)
+
+      httpApp = (
+        jsonSchemaValidationRoutes.schemaRoutes <+>
+          jsonSchemaValidationRoutes.validateRoutes
+      ).orNotFound
+
+      finalHttpApp = Logger.httpApp(true, true)(httpApp)
 
       exitCode <- Stream.resource(
         EmberServerBuilder
