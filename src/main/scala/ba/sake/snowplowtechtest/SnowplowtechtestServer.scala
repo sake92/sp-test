@@ -13,23 +13,23 @@ object SnowplowtechtestServer {
 
   def stream: Stream[IO, Nothing] = {
     val httpApp = (
-        JsonSchemaValidationRoutes.schemaRoutes <+>
+      JsonSchemaValidationRoutes.schemaRoutes <+>
         JsonSchemaValidationRoutes.validateRoutes
-      ).orNotFound
+    ).orNotFound
 
-      // With Middlewares in place
-    val  finalHttpApp = Logger.httpApp(true, true)(httpApp)
+    // With Middlewares in place
+    val finalHttpApp = Logger.httpApp(true, true)(httpApp)
     val bla = for {
       _ <- Stream(())
-      
 
       exitCode <- Stream.resource(
-        EmberServerBuilder.default[IO]
+        EmberServerBuilder
+          .default[IO]
           .withHost(ipv4"0.0.0.0")
           .withPort(port"8080")
           .withHttpApp(finalHttpApp)
           .build >>
-        Resource.eval(IO.never)
+          Resource.eval(IO.never)
       )
     } yield exitCode
     bla

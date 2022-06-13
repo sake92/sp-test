@@ -8,7 +8,7 @@ import org.http4s.dsl.Http4sDsl
 object JsonSchemaValidationRoutes {
 
   def schemaRoutes: HttpRoutes[IO] = {
-    val dsl = new Http4sDsl[IO]{}
+    val dsl = new Http4sDsl[IO] {}
     import dsl._
     HttpRoutes.of[IO] {
       case POST -> Root / "schema" / schemaId =>
@@ -21,9 +21,8 @@ object JsonSchemaValidationRoutes {
   def validateRoutes: HttpRoutes[IO] = {
     val dsl = new Http4sDsl[IO] {}
     import dsl._
-    HttpRoutes.of[IO] {
-      case POST -> Root / "validate" / schemaId =>
-        Ok(s"Validate against schema under id: $schemaId")
+    HttpRoutes.of[IO] { case POST -> Root / "validate" / schemaId =>
+      Ok(s"Validate against schema under id: $schemaId")
     }
   }
 }
