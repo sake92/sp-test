@@ -16,30 +16,33 @@ class JsonSchemaService(jsonSchemaRepository: JsonSchemaRepository) {
   def create(jsonSchema: JsonSchema): IO[Int] =
     jsonSchemaRepository.create(jsonSchema)
 
-  def getById(schemaId: String): IO[JsonSchema] =
+  def getById(schemaId: String): IO[Option[JsonSchema]] =
     jsonSchemaRepository.getById(schemaId)
 
   def getAll: Stream[IO, JsonSchema] =
     jsonSchemaRepository.getAll
 
   def validate(schemaId: String, json: String): IO[Either[String, String]] = for {
-    schema <- getById(schemaId)
-    res = validateJson(schema.content, json)
+    schemaOpt <- getById(schemaId)
+    res = validateJson(schemaId, schemaOpt, json)
   } yield res
 
-  private def validateJson(schemaContent: String, json: String): Either[String, String] = {
-    val schemaNode = JsonLoader.fromString(schemaContent)
-    val jsonNode = JsonLoader.fromString(json)
-    val res = validator.validate(schemaNode, jsonNode, true)
-    if (res.isSuccess) Right("success")
-    else {
-      val errors = res.iterator.asScala.map { processingMessage =>
-        val messageNode = processingMessage.asJson
-        val path = messageNode.at("/instance/pointer").asText
-        val message = messageNode.at("/message").asText
-        s"""Property '$path' error: $message"""
+  private def validateJson(schemaId: String, schemaOpt: Option[JsonSchema], json: String): Either[String, String] = {
+    schemaOpt.toRight(s"Schema with id $schemaId does not exist").flatMap { schema =>
+      val schemaNode = JsonLoader.fromString(schema.content)
+      val jsonNode = JsonLoader.fromString(json)
+      val res = validator.validate(schemaNode, jsonNode, true)
+      if (res.isSuccess) Right("success")
+      else {
+        val errors = res.iterator.asScala.map { processingMessage =>
+          val messageNode = processingMessage.asJson
+          val path = messageNode.at("/instance/pointer").asText
+          val message = messageNode.at("/message").asText
+          s"""Property '$path' error: $message"""
+        }
+        Left(errors.mkString(";"))
       }
-    Left(errors.mkString(";"))
     }
+
   }
 }

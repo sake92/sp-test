@@ -5,12 +5,14 @@ import io.circe._
 import io.circe.syntax._
 import org.http4s.HttpRoutes
 import org.http4s.dsl.Http4sDsl
+import org.http4s.headers.`Content-Type`
 import org.http4s.Request
 import org.http4s.Response
 import org.http4s.circe._
 
 import ba.sake.snowplowtechtest.services.JsonSchemaService
 import ba.sake.snowplowtechtest.db.models.JsonSchema
+import org.http4s.MediaType
 
 class JsonSchemaValidationRoutes(
     jsonSchemaService: JsonSchemaService
@@ -31,7 +33,10 @@ class JsonSchemaValidationRoutes(
         }
 
       case GET -> Root / "schema" / schemaId =>
-        Ok(jsonSchemaService.getById(schemaId).map(_.content))
+        jsonSchemaService.getById(schemaId).flatMap {
+          case Some(schema) => Ok(schema.content).map(_.withContentType(`Content-Type`(MediaType.application.json)))
+          case None         => NotFound(ApiResult.failure("getSchema", schemaId, "Schema does not exist").asJson)
+        }
     }
 
   def validateRoutes: HttpRoutes[IO] =
@@ -39,14 +44,12 @@ class JsonSchemaValidationRoutes(
       val actionName = "validateDocument"
       withJsonBody(req, actionName, schemaId) { json =>
         val jsonNoNulls = json.deepDropNullValues.asJson.noSpaces
-        val res = jsonSchemaService
+        jsonSchemaService
           .validate(schemaId, jsonNoNulls)
-          .map {
-            case Right(_)  => ApiResult.success(actionName, schemaId)
-            case Left(msg) => ApiResult.failure(actionName, schemaId, msg)
+          .flatMap {
+            case Right(_)  => Ok(ApiResult.success(actionName, schemaId).asJson)
+            case Left(msg) => BadRequest(ApiResult.failure(actionName, schemaId, msg).asJson)
           }
-          .map(_.asJson)
-        Ok(res)
       }
     }
 
