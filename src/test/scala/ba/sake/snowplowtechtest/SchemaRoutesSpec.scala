@@ -1,5 +1,5 @@
 package ba.sake.snowplowtechtest
-
+/*
 import cats.effect.IO
 import org.http4s._
 import org.http4s.implicits._
@@ -20,4 +20,4 @@ class SchemaRoutesSpec extends CatsEffectSuite {
     val getHW = Request[IO](Method.GET, uri"/schema/example123")
     JsonSchemaValidationRoutes.schemaRoutes.orNotFound(getHW)
   }
-}
+}*/

@@ -1,0 +1,128 @@
+{
+	"info": {
+		"_postman_id": "8e3c0791-0022-4af4-a2f4-a0a3a3ba016c",
+		"name": "snowplowtechtest",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "create schema",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"$schema\": \"http://json-schema.org/draft-04/schema#\",\r\n  \"type\": \"object\",\r\n  \"properties\": {\r\n    \"source\": {\r\n      \"type\": \"string\"\r\n    },\r\n    \"destination\": {\r\n      \"type\": \"string\"\r\n    },\r\n    \"timeout\": {\r\n      \"type\": \"integer\",\r\n      \"minimum\": 0,\r\n      \"maximum\": 32767\r\n    },\r\n    \"chunks\": {\r\n      \"type\": \"object\",\r\n      \"properties\": {\r\n        \"size\": {\r\n          \"type\": \"integer\"\r\n        },\r\n        \"number\": {\r\n          \"type\": \"integer\"\r\n        }\r\n      },\r\n      \"required\": [\"size\"]\r\n    }\r\n  },\r\n  \"required\": [\"source\", \"destination\"]\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8080/schema/myschema",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"schema",
+						"myschema"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "get schema",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8080/schema/myschema",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"schema",
+						"myschema"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "validate valid",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"source\": \"/home/alice/image.iso\",\r\n  \"destination\": \"/mnt/storage\",\r\n  \"timeout\": null,\r\n  \"chunks\": {\r\n    \"size\": 1024,\r\n    \"number\": null\r\n  }\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8080/validate/myschema",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"validate",
+						"myschema"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "validate invalid",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"source\": \"/home/alice/image.iso\",\r\n  \"destination\": \"/mnt/storage\",\r\n  \"timeout\": true,\r\n  \"chunks\": {\r\n    \"size\": \"1024\",\r\n    \"number\": null\r\n  }\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8080/validate/myschema",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"validate",
+						"myschema"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
