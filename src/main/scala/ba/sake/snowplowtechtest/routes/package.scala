@@ -9,6 +9,12 @@ sealed trait ApiResult extends Product with Serializable
 
 object ApiResult {
 
+  def success(action: String, id: String): ApiResult =
+    Success(action, id, "success")
+
+  def failure(action: String, id: String, message: String): ApiResult =
+    Failure(action, id, "error", message)
+
   case class Success(
       action: String,
       id: String,
