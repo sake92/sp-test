@@ -26,10 +26,10 @@ class JsonSchemaValidationRoutes(
         val actionName = "uploadSchema"
         withJsonBody(req, actionName, schemaId) { json =>
           val jsonSchema = JsonSchema(schemaId, json.asJson.noSpaces)
-          val res = for {
-            _ <- jsonSchemaService.create(jsonSchema)
-          } yield ApiResult.success(actionName, schemaId).asJson
-          Created(res)
+          jsonSchemaService.create(jsonSchema).flatMap {
+            case Right(_)  => Created(ApiResult.success(actionName, schemaId).asJson)
+            case Left(msg) => BadRequest(ApiResult.failure(actionName, schemaId, msg).asJson)
+          }
         }
 
       case GET -> Root / "schema" / schemaId =>

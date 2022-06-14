@@ -13,8 +13,11 @@ class JsonSchemaService(jsonSchemaRepository: JsonSchemaRepository) {
 
   private val validator = JsonSchemaFactory.byDefault.getValidator
 
-  def create(jsonSchema: JsonSchema): IO[Int] =
-    jsonSchemaRepository.create(jsonSchema)
+  def create(jsonSchema: JsonSchema): IO[Either[String, Int]] =
+    jsonSchemaRepository.getById(jsonSchema.schemaId).flatMap {
+      case None    => jsonSchemaRepository.create(jsonSchema).map(Right(_))
+      case Some(_) => IO.pure(Left(s"Schema with id '${jsonSchema.schemaId}' already exists"))
+    }
 
   def getById(schemaId: String): IO[Option[JsonSchema]] =
     jsonSchemaRepository.getById(schemaId)
