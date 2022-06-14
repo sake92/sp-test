@@ -7,8 +7,6 @@ import com.comcast.ip4s._
 import org.http4s.ember.server.EmberServerBuilder
 import org.http4s.implicits._
 import org.http4s.server.middleware.Logger
-import pureconfig._
-import pureconfig.generic.auto._
 
 import ba.sake.snowplowtechtest.db.DB
 import ba.sake.snowplowtechtest.db.repositories._
@@ -16,15 +14,11 @@ import ba.sake.snowplowtechtest.services._
 import ba.sake.snowplowtechtest.routes._
 
 object SnowplowtechtestServer {
-  import AppConfig._
 
   def stream: Stream[IO, Nothing] = {
     for {
-      config <- Stream.fromEither[IO](
-        ConfigSource.default
-          .load[AppConfig]
-          .leftMap(failures => new RuntimeException(failures.toString))
-      )
+      config <- Stream.fromEither[IO](AppConfig.load)
+
       xa <- Stream.resource(DB.transactor(config))
       _ <- Stream.eval(DB.applyDbMigrations(xa))
 

@@ -21,6 +21,7 @@ lazy val root = (project in file("."))
       "org.http4s" %% "http4s-dsl" % V.Http4s,
       "io.circe" %% "circe-generic" % V.Circe,
       "com.github.pureconfig" %% "pureconfig" % "0.17.1",
+      "com.github.java-json-tools" % "json-schema-validator" % "2.2.14",
       // db
       "org.tpolecat" %% "doobie-core" % V.Doobie,
       "org.tpolecat" %% "doobie-hikari" % V.Doobie,

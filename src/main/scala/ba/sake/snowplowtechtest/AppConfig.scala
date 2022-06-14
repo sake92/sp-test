@@ -1,8 +1,10 @@
 package ba.sake.snowplowtechtest
 
+import cats.syntax.all._
 import com.comcast.ip4s._
 import pureconfig._
 import pureconfig.error._
+import pureconfig.generic.auto._
 
 case class ServerConfig(port: Port)
 
@@ -24,4 +26,8 @@ object AppConfig {
     ConfigReader[Int].emap { n =>
       Port.fromInt(n).toRight(CannotConvert(n.toString, "Port", "Invalid port number"))
     }
+
+  def load = ConfigSource.default
+    .load[AppConfig]
+    .leftMap(failures => new RuntimeException(failures.toString))
 }
